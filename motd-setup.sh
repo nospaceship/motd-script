@@ -1,34 +1,41 @@
 #!/bin/bash
 
-# Define the message
-MOTD_MESSAGE="Welcome to Jordan's Homelab! Whatever you are creating please be mindful of the basic security practices. I'M WATCHING YOU :)."
+# Define the MOTD file
+MOTD_FILE="/etc/motd"
 
-echo "Updating MOTD on this system..."
+# Gather system information
+# (Include your existing system information gathering here)
 
-# Detect the OS
-if [[ -f /etc/os-release ]]; then
-    . /etc/os-release
-else
-    echo "Unsupported OS. Exiting."
-    exit 1
-fi
+# Fetch the last login details
+last_login_info=$(last -n 2 -R | tail -n 1)
+last_login_user=$(echo "$last_login_info" | awk '{print $1}')
+last_login_ip=$(echo "$last_login_info" | awk '{print $3}')
+last_login_time=$(echo "$last_login_info" | awk '{print $4, $5, $6, $7, $8}')
+last_login_details="User: $last_login_user, IP: $last_login_ip, Time: $last_login_time"
 
-# Apply MOTD based on OS type
-case "$ID" in
-    ubuntu|debian)
-        echo "$MOTD_MESSAGE" | sudo tee /etc/motd > /dev/null
-        echo "MOTD updated for Debian/Ubuntu."
-        ;;
-    rhel|centos|fedora)
-        echo "$MOTD_MESSAGE" | sudo tee /etc/issue.net > /dev/null
-        sudo sed -i 's|#Banner.*|Banner /etc/issue.net|' /etc/ssh/sshd_config
-        sudo systemctl restart sshd
-        echo "MOTD updated for RHEL-based systems."
-        ;;
-    *)
-        echo "OS not supported by this script."
-        exit 1
-        ;;
-esac
+# Create the new MOTD content
+NEW_CONTENT=$(cat << EOF
 
-echo "Done! Log out and log back in to see your new MOTD."
+$(figlet "JORDAN'S LAB")
+Welcome to my Homelab!
+
+System Information:
+-------------------
+# (Include your existing system information here)
+Last Login       : $last_login_details
+
+EOF
+)
+
+# Backup the existing MOTD
+sudo cp $MOTD_FILE ${MOTD_FILE}.bak
+
+# Remove existing '#' border lines and append new content
+sudo sed -i '/^#.*$/d' $MOTD_FILE
+echo "$NEW_CONTENT" | sudo tee -a $MOTD_FILE > /dev/null
+
+# Apply correct permissions
+sudo chmod 644 $MOTD_FILE
+
+# Notify user
+echo "MOTD successfully updated with 'JORDAN'S LAB' banner and system information."
