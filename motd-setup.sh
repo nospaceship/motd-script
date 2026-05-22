@@ -3,8 +3,21 @@
 # Define the MOTD file
 MOTD_FILE="/etc/motd"
 
-# Gather system information
-# (Include your existing system information gathering here)
+# Install figlet if not present
+if ! command -v figlet &>/dev/null; then
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get install -y figlet
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y figlet
+    elif command -v yum &>/dev/null; then
+        sudo yum install -y figlet
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -S --noconfirm figlet
+    else
+        echo "Could not install figlet: no supported package manager found."
+        exit 1
+    fi
+fi
 
 # Fetch the last login details
 last_login_info=$(last -n 2 -R | tail -n 1)
