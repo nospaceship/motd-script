@@ -27,6 +27,12 @@ Last Login       : $last_login_details
 EOF
 )
 
+# Skip if already configured
+if sudo grep -q "Welcome to my Homelab!" "$MOTD_FILE" 2>/dev/null; then
+    echo "MOTD already configured. Exiting."
+    exit 0
+fi
+
 # Backup the existing MOTD
 sudo cp $MOTD_FILE ${MOTD_FILE}.bak
 
